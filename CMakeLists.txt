@@ -25,6 +25,15 @@ FILE(GLOB_RECURSE HEADER_FILES ${PROJECT_SOURCE_DIR}/include/*.h)
 aux_source_directory(${PROJECT_SOURCE_DIR}/src SOURCES_FILES)
 
 add_executable(GeetFS main.cpp ${SOURCES_FILES} ${UI_FILES} ${RC_FILES} ${QRC_FILES} ${HEADER_FILES}
+        src/File.cpp
+        include/File.h
+        src/Commit.cpp
+        include/Commit.h
+        include/Commit.h
+        src/GeetFS.cpp
+        include/GeetFS.h
+        src/Command.cpp
+        include/Command.h
 )
 target_link_libraries(GeetFS
         Qt::Core
