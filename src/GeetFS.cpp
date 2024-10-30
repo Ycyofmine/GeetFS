@@ -80,9 +80,8 @@ void GeetFS::saveToTxt(const std::string &address) const {
 
     outFile << "\nAll Commits:\n";
     for (const auto &entry : id) {
-        outFile << "Commit ID: " << entry.first << "\n";
         saveCommit(outFile, entry.second);
-        outFile << "\n";
+//        outFile << "\n";
     }
 
     outFile.close();
@@ -99,15 +98,19 @@ void GeetFS::saveToTxt(const std::string &address) const {
 void GeetFS::saveCommit(std::ofstream &outFile, const Commit &commit) const {
     outFile << "Commit Name: " << commit.cmtName << "\n";
 
-    outFile << "Files:\n";
     for (const auto &file : commit.files) {
-        outFile << file.name << "\n";
-        outFile << file.content << "\n";
-        outFile << file.time << "\n";
+        outFile << "Files:\n";
+        outFile << "Name:" << file.name << "\n";
+        outFile << "Content:" << file.content << "\n";
+        outFile << "Time:" << file.time << "\n";
     }
 
-    outFile << "Sub Commits:\n";
+    if (commit.facmt.empty()) {
+        return;
+    }
+
     for (const auto &subCommit : commit.facmt) {
+        outFile << "Sub Commits:\n";
         saveCommit(outFile, subCommit);  // 递归保存子提交
     }
 }
@@ -128,11 +131,9 @@ void GeetFS::loadFromTxt(const std::string &address) {
     std::getline(inFile, line);//"Uncommited Commit:"
     uncommited = loadCommit(inFile);
     std::getline(inFile, line);//"All Commits:"
-    while (std::getline(inFile, line)) {
-        if (line.substr(0, 9) == "Commit ID") {
-            std::string commitID = line.substr(12);
-            id[commitID] = loadCommit(inFile);
-        }
+    while (std::getline(inFile, line) && line.substr(0, 14) == "Commit Name: ") {
+        std::string cmtName = line.substr(12);
+        id[cmtName] = loadCommit(inFile);
     }
 }
 
@@ -146,14 +147,16 @@ Commit GeetFS::loadCommit(std::ifstream& inFile) {
     while (std::getline(inFile, line) && line.substr(0, 6) == "Files:") {
         File file;
         std::getline(inFile, line);
-        file.name = line;
+        file.name = line.substr(5);
         std::getline(inFile, line);
-        file.content = line;
+        file.content = line.substr(8);
         std::getline(inFile, line);
-        file.time = stoi(line);
+        file.time = stoi(line.substr(5));
 
         ret.files.insert(file);
     }
+
+    std::cerr << "cmtName:" << ret.cmtName << std::endl;
 
     while (line == "Sub Commits:") {
         Commit subCommit = loadCommit(inFile);
@@ -167,5 +170,4 @@ Commit GeetFS::loadCommit(std::ifstream& inFile) {
 void GeetFS::solve() {
     
 
-    saveToTxt(std::string(R"(D:\Games\GeetFS\resources\data.txt)"));
 }

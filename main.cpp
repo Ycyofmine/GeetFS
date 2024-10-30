@@ -45,5 +45,8 @@ int main(int argc, char *argv[]) {
     WriteCommand("file3", 5, 3, "lmn").execute(geetFS);
     ReadCommand("file3", 0, 10).execute(geetFS);
 
+//    geetFS.loadFromTxt(std::string(R"(D:\Games\GeetFS\resources\data.txt)"));
+    geetFS.saveToTxt(std::string(R"(D:\Games\GeetFS\resources\data.txt)"));
+
     geetFS.solve();
 }
