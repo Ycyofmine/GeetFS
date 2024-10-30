@@ -30,9 +30,9 @@ void File::write(int offset, int len, std::string input) {
 void File::display(int offset, int len) {
     for (int j = offset; j <= offset + len - 1; j++) {
         if (j < content.size())
-            std::cout << content[j];
+            std::cerr << content[j];
         else
-            std::cout << ".";
+            std::cerr << ".";
     }
-    std::cout << "\n";
+    std::cerr << "\n";
 }

@@ -5,7 +5,6 @@
 #include "Commit.h"
 #include "File.h"
 
-extern int whole_time;
 
 // 重载小于运算符用于比较Commit对象
 bool Commit::operator<(const Commit &other) const {
@@ -13,8 +12,13 @@ bool Commit::operator<(const Commit &other) const {
 }
 
 // 在files集合中查找指定文件
-bool Commit::search(const std::string &fileName) const {
+bool Commit::containsFile(const std::string &fileName) const {
     return files.find(File{fileName, "", 0}) != files.end();
+}
+
+std::set<File>::const_iterator Commit::findFile(const std::string &fileName) const
+{
+    return files.find(File{fileName, "", 0});
 }
 
 // 删除files集合中指定文件
@@ -31,6 +35,11 @@ bool Commit::del(const std::string &fileName) {
 void Commit::ins(const std::string &fileName, std::string content, int offset, int len, const std::string &input) {
     File file(fileName, std::move(content), whole_time);
     file.write(offset, len, input);
+    files.emplace(std::move(file));
+}
+
+void Commit::ins(const std::string &fileName) {
+    File file(fileName, std::string(""), whole_time);
     files.emplace(std::move(file));
 }
 

@@ -65,14 +65,20 @@ private:
 
 class checkoutCommand : public Command {
 public:
+    explicit checkoutCommand(std::string cmtName) : cmtName(std::move(cmtName)) {}
+
+
     void execute(GeetFS &geetFS) override;
+
+private:
+    std::string cmtName;
 };
 
-class commitCommand : public Command {
+class CommitCommand : public Command {
 public:
-    explicit commitCommand(std::string cmtName) : cmtName(std::move(cmtName)) {}
+    explicit CommitCommand(std::string cmtName) : cmtName(std::move(cmtName)) {}
 
-    void execute(GeetFS &geetFS);
+    void execute(GeetFS &geetFS) override;
 
 private:
     std::string cmtName;

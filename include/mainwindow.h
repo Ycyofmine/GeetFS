@@ -6,13 +6,19 @@
 #define UNTITLED_MAINWINDOW_H
 
 #include <QWidget>
+#include <QMainWindow>
+#include <QLineEdit>
+#include <QPushButton>
+#include <QTextEdit>
+
+#include "GeetFS.h"
 
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
-class MainWindow : public QWidget {
+class MainWindow : public QMainWindow {
 Q_OBJECT
 
 public:
@@ -20,8 +26,14 @@ public:
 
     ~MainWindow() override;
 
+private slots:
+    void onCommandSubmit();
+
 private:
-    Ui::MainWindow *ui;
+    QLineEdit *commandInput;
+    QPushButton *submitButton;
+    QTextEdit *outputDisplay;
+    GeetFS &geetFS = GeetFS::getInstance();  // 假设 geetFS 是一个已经初始化的对象
 };
 
 

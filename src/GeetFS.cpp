@@ -4,23 +4,36 @@
 
 #include "GeetFS.h"
 
-bool GeetFS::searchUncommitted(const std::string &fileName) {
-    return uncommited.search(fileName);
+//在uncommited中文件是否存在
+bool GeetFS::fileExists(const std::string &fileName) {
+    return uncommited.containsFile(fileName);
 }
 
-void GeetFS::deleteUncommitted(const std::string &fileName) {
+//在uncommited中删除文件
+void GeetFS::deleteFile(const std::string &fileName) {
     uncommited.del(fileName);
 }
 
-void GeetFS::insertUncommitted(const std::string &fileName, const std::string &content, int offset, int len, const std::string &input) {
+//在uncommited中插入正常文件
+void GeetFS::insertFile(const std::string &fileName, const std::string &content, int offset, int len, const std::string &input) {
     uncommited.ins(fileName, content, offset, len, input);
 }
 
-const File* GeetFS::findUncommittedFile(const std::string &fileName) {
-    return searchFileUncommitted(fileName, "", 0);
+//在uncommited中插入暗文件
+void GeetFS::insertFile(const std::string &fileName) {
+    uncommited.ins(fileName);
 }
 
-const File* GeetFS::searchFileUncommitted(const std::string& fileName, const std::string& content, int time) {
+bool GeetFS::idNotExists(const std::string &cmtName) const
+{
+    return id.find(cmtName) == id.end();
+}
+
+const File* GeetFS::findFile(const std::string &fileName) {
+    return findFile(fileName, "", 0);
+}
+
+const File* GeetFS::findFile(const std::string& fileName, const std::string& content, int time) {
     auto it = uncommited.files.find(File{fileName, std::string(""), time});
 
     return it != uncommited.files.end() ? &(*it) : nullptr;
@@ -34,6 +47,125 @@ void GeetFS::serCommited(const std::function<void(const Commit &)> &action) {
     }
 }
 
-void GeetFS::solve() {
+bool GeetFS::uncommitedEmpty() const {
+    return uncommited.isEmpty();
+}
 
+void GeetFS::setHead(const std::string &cmtName) {
+    head = id[cmtName];
+}
+
+const Commit &GeetFS::getHead() const {
+    return head;
+}
+
+const Commit &GeetFS::getUncommited() const {
+    return uncommited;
+}
+
+//程序要结束时保存文件
+void GeetFS::saveToTxt(const std::string &address) const {
+    std::ofstream outFile(address);
+
+    if (!outFile.is_open()) {
+        std::cerr << "无法打开文件" << address << std::endl;
+        return;
+    }
+
+    outFile << "Head Commit:\n";
+    saveCommit(outFile, head);
+
+    outFile << "\nUncommited Commit:\n";
+    saveCommit(outFile, uncommited);
+
+    outFile << "\nAll Commits:\n";
+    for (const auto &entry : id) {
+        outFile << "Commit ID: " << entry.first << "\n";
+        saveCommit(outFile, entry.second);
+        outFile << "\n";
+    }
+
+    outFile.close();
+}
+
+//head/uncommited/id
+//Commit Name:
+//Files:
+//      name
+//      content
+//      time
+//Sub Commit
+//facmt  Back to line87
+void GeetFS::saveCommit(std::ofstream &outFile, const Commit &commit) const {
+    outFile << "Commit Name: " << commit.cmtName << "\n";
+
+    outFile << "Files:\n";
+    for (const auto &file : commit.files) {
+        outFile << file.name << "\n";
+        outFile << file.content << "\n";
+        outFile << file.time << "\n";
+    }
+
+    outFile << "Sub Commits:\n";
+    for (const auto &subCommit : commit.facmt) {
+        saveCommit(outFile, subCommit);  // 递归保存子提交
+    }
+}
+
+//程序开始时载入文件
+void GeetFS::loadFromTxt(const std::string &address) {
+    std::ifstream inFile(address);
+
+    if (!inFile.is_open()) {
+        std::cerr << "读取失败" << address << std::endl;
+        return;
+    }
+
+    std::string line;
+
+    std::getline(inFile, line);//"Head Commit:\n"
+    head = loadCommit(inFile);
+    std::getline(inFile, line);//"Uncommited Commit:"
+    uncommited = loadCommit(inFile);
+    std::getline(inFile, line);//"All Commits:"
+    while (std::getline(inFile, line)) {
+        if (line.substr(0, 9) == "Commit ID") {
+            std::string commitID = line.substr(12);
+            id[commitID] = loadCommit(inFile);
+        }
+    }
+}
+
+Commit GeetFS::loadCommit(std::ifstream& inFile) {
+    Commit ret;
+    
+    std::string line;
+    std::getline(inFile, line);
+    ret.cmtName = line.substr(13);
+
+    while (std::getline(inFile, line) && line.substr(0, 6) == "Files:") {
+        File file;
+        std::getline(inFile, line);
+        file.name = line;
+        std::getline(inFile, line);
+        file.content = line;
+        std::getline(inFile, line);
+        file.time = stoi(line);
+
+        ret.files.insert(file);
+    }
+
+    while (line == "Sub Commits:") {
+        Commit subCommit = loadCommit(inFile);
+        ret.facmt.insert(subCommit);
+        if (!std::getline(inFile, line));
+    }
+
+    return ret;
+}
+
+void GeetFS::solve() {
+    
+
+    saveToTxt(std::string(R"(D:\Games\GeetFS\resources\data.txt)"));
 }
