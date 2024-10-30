@@ -81,7 +81,6 @@ void GeetFS::saveToTxt(const std::string &address) const {
     outFile << "\nAll Commits:\n";
     for (const auto &entry : id) {
         saveCommit(outFile, entry.second);
-//        outFile << "\n";
     }
 
     outFile.close();
@@ -120,48 +119,87 @@ void GeetFS::loadFromTxt(const std::string &address) {
     std::ifstream inFile(address);
 
     if (!inFile.is_open()) {
-        std::cerr << "读取失败" << address << std::endl;
+        std::cerr << "读取失败: " << address << std::endl;
         return;
     }
 
     std::string line;
 
-    std::getline(inFile, line);//"Head Commit:\n"
+    // 读取 Head Commit
+    std::getline(inFile, line); // "Head Commit:"
     head = loadCommit(inFile);
-    std::getline(inFile, line);//"Uncommited Commit:"
+
+    // 读取 Uncommited Commit
+    std::getline(inFile, line); // "Uncommited Commit:"
     uncommited = loadCommit(inFile);
-    std::getline(inFile, line);//"All Commits:"
-    while (std::getline(inFile, line) && line.substr(0, 14) == "Commit Name: ") {
-        std::string cmtName = line.substr(12);
-        id[cmtName] = loadCommit(inFile);
+
+    // 读取 All Commits
+    std::getline(inFile, line); // "All Commits:"
+    std::getline(inFile, line);// first cmt
+    while (!line.empty()) {
+        std::cerr << line << std::endl;
+        if (!(line.substr(0, 12) == "Commit Name:")) {
+            break;
+        }
+        // 提取提交名称并直接传递给 loadCommit
+        std::string commitName = line.substr(13);
+        id[commitName] = loadCommit(inFile, commitName, line);
     }
 }
 
 Commit GeetFS::loadCommit(std::ifstream& inFile) {
     Commit ret;
-    
+
     std::string line;
     std::getline(inFile, line);
     ret.cmtName = line.substr(13);
 
-    while (std::getline(inFile, line) && line.substr(0, 6) == "Files:") {
+    while (std::getline(inFile, line) && line == "Files:") {
         File file;
         std::getline(inFile, line);
         file.name = line.substr(5);
+
         std::getline(inFile, line);
         file.content = line.substr(8);
+
         std::getline(inFile, line);
         file.time = stoi(line.substr(5));
 
         ret.files.insert(file);
     }
 
-    std::cerr << "cmtName:" << ret.cmtName << std::endl;
+    if (line == "Sub Commits:") {
+        Commit cmt = loadCommit(inFile);
+        ret.facmt.insert(cmt);
+    }
 
-    while (line == "Sub Commits:") {
-        Commit subCommit = loadCommit(inFile);
-        ret.facmt.insert(subCommit);
-        if (!std::getline(inFile, line));
+    return ret;
+}
+
+//用于读取数据到id中
+Commit GeetFS::loadCommit(std::ifstream &inFile, const std::string& commitName, std::string &line) {
+    Commit ret;
+    ret.cmtName = commitName;
+
+    // 读取文件内容
+    while (std::getline(inFile, line) && line == "Files:") {
+        File file;
+        std::getline(inFile, line);
+        file.name = line.substr(5);  // "Name: xxxx"
+
+        std::getline(inFile, line);
+        file.content = line.substr(8);  // "Content: xxx"
+
+        std::getline(inFile, line);
+        file.time = std::stoi(line.substr(5));  // "Time: xxx"
+
+        ret.files.insert(file);
+    }
+
+    // 读取子提交（Sub Commits）
+    if (line == "Sub Commits:") {
+        Commit cmt = loadCommit(inFile);
+        ret.facmt.insert(cmt);
     }
 
     return ret;

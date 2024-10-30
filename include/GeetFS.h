@@ -44,6 +44,8 @@ public:
 
     void saveCommit(std::ofstream &outFile, const Commit &commit) const;
     Commit loadCommit(std::ifstream &inFile);
+    Commit loadCommit(std::ifstream &inFile, const std::string &commitName, std::string &line);
+
 
     [[nodiscard]] const Commit &getUncommited() const;
     [[nodiscard]] const Commit &getHead() const;
@@ -53,6 +55,7 @@ public:
     std::map<std::string, Commit> id;
 private:
     GeetFS() = default;
+
 };
 
 #endif //GEETFS_GEETFS_H
