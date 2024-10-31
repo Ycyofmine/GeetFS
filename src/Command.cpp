@@ -196,19 +196,16 @@ void unlinkCommand::execute(GeetFS &geetFS) {
 }
 
 void checkoutCommand::execute(GeetFS &geetFS) {
-    if (geetFS.idNotExists(cmtName) || geetFS.uncommitedEmpty()) 
+    if (geetFS.id.find(cmtName) == geetFS.id.end() || !geetFS.uncommited.isEmpty())
         return;
-    
-    geetFS.setHead(cmtName);
+    geetFS.head = geetFS.id[cmtName];
 }
 
 //偷懒了，要解耦以后再说
 void CommitCommand::execute(GeetFS &geetFS) {
-    if (!geetFS.idNotExists(cmtName) || geetFS.uncommitedEmpty())
+    if (geetFS.id.find(cmtName) != geetFS.id.end() || geetFS.uncommited.isEmpty()) {
         return;
-
-    std::cerr << 1 << std::endl;
-
+    }
     Commit new_commit = geetFS.uncommited;
     new_commit.cmtName = cmtName;
     if (geetFS.head.cmtName != "") {
@@ -221,8 +218,8 @@ void CommitCommand::execute(GeetFS &geetFS) {
 }
 
 void mergeCommand::execute(GeetFS &geetFS) {
-    if (!geetFS.uncommitedEmpty() || mergee == geetFS.head.cmtName || geetFS.idNotExists(mergee))
-        return;
+    if (!geetFS.uncommited.isEmpty() || mergee == geetFS.head.cmtName || geetFS.id.find(mergee) == geetFS.id.end())
+            return;
     Commit pos = geetFS.id[mergee];
     Commit new_commit;
     new_commit.cmtName = cmtName;

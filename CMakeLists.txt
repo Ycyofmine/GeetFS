@@ -34,6 +34,8 @@ add_executable(GeetFS main.cpp ${SOURCES_FILES} ${UI_FILES} ${RC_FILES} ${QRC_FI
         include/GeetFS.h
         src/Command.cpp
         include/Command.h
+        src/Serializer.cpp
+        include/Serializer.h
 )
 target_link_libraries(GeetFS
         Qt::Core
